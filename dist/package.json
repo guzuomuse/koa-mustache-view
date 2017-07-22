@@ -1,0 +1,23 @@
+{
+  "name": "koa-mustache-view",
+  "version": "1.0.0",
+  "description": "koa-mustache-view",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "koa2",
+    "mustache",
+    "view"
+  ],
+  "author": "guzuomuse",
+  "license": "MIT",
+  "dependencies": {
+    "@types/mustache": "^0.8.29",
+    "mustache": "^2.3.0"
+  },
+  "devDependencies": {
+    "@types/koa": "^2.0.39"
+  }
+}
