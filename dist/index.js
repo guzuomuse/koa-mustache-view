@@ -44,7 +44,7 @@ exports.default = function (views_path, opts) {
     var ext = '.' + (opts.extension || 'html');
     return function (ctx, next) { return __awaiter(_this, void 0, void 0, function () {
         var _this = this;
-        var render, global_partials;
+        var render, global_partials, defaultLayout;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -54,13 +54,34 @@ exports.default = function (views_path, opts) {
                 case 2:
                     render = mustache.render;
                     global_partials = Object.assign({}, opts.partials || {});
-                    ctx.render = function (view, obj, partials) {
+                    defaultLayout = opts['defaultLayout'];
+                    ctx.render = function (view, obj, _opts) {
                         if (obj === void 0) { obj = {}; }
+                        if (_opts === void 0) { _opts = {}; }
                         return __awaiter(_this, void 0, void 0, function () {
-                            var view_path, view_data, all_partials, all_partials_data_obj, html;
+                            var html;
+                            return __generator(this, function (_a) {
+                                switch (_a.label) {
+                                    case 0: return [4 /*yield*/, ctx.renderView(view, obj, _opts)];
+                                    case 1:
+                                        html = _a.sent();
+                                        ctx.type = ctx.type || 'html';
+                                        ctx.body = html;
+                                        return [2 /*return*/];
+                                }
+                            });
+                        });
+                    };
+                    ctx.renderView = function (view, obj, _opts) {
+                        if (obj === void 0) { obj = {}; }
+                        if (_opts === void 0) { _opts = {}; }
+                        return __awaiter(_this, void 0, void 0, function () {
+                            var partials, layout, view_path, view_data, all_partials, all_partials_data_obj, layout_file_path, layout_file_data, body, _obj, default_layout_file_path, default_layout_file_data, body, _obj;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
+                                        partials = _opts.partials || {};
+                                        layout = _opts.layout === false ? false : _opts.layout;
                                         obj = Object.assign({}, ctx.state, obj);
                                         view = view + ext;
                                         view_path = path_1.resolve(views_path, view);
@@ -72,12 +93,27 @@ exports.default = function (views_path, opts) {
                                             return Object.assign(current, (_a = {}, _a[key] = partial_file_data, _a));
                                             var _a;
                                         }, {});
+                                        if (!layout) return [3 /*break*/, 3];
+                                        layout_file_path = path_1.resolve(views_path, layout + ext);
+                                        layout_file_data = fs_1.readFileSync(layout_file_path, 'utf-8');
                                         return [4 /*yield*/, render(view_data, obj, all_partials_data_obj)];
                                     case 1:
-                                        html = _a.sent();
-                                        ctx.type = ctx.type || 'html';
-                                        ctx.body = html;
-                                        return [2 /*return*/];
+                                        body = _a.sent();
+                                        _obj = Object.assign(obj, { body: body });
+                                        return [4 /*yield*/, render(layout_file_data, _obj, all_partials_data_obj)];
+                                    case 2: return [2 /*return*/, _a.sent()];
+                                    case 3:
+                                        if (!defaultLayout) return [3 /*break*/, 6];
+                                        default_layout_file_path = path_1.resolve(views_path, defaultLayout + ext);
+                                        default_layout_file_data = fs_1.readFileSync(default_layout_file_path, 'utf-8');
+                                        return [4 /*yield*/, render(view_data, obj, all_partials_data_obj)];
+                                    case 4:
+                                        body = _a.sent();
+                                        _obj = Object.assign(obj, { body: body });
+                                        return [4 /*yield*/, render(default_layout_file_data, _obj, all_partials_data_obj)];
+                                    case 5: return [2 /*return*/, _a.sent()];
+                                    case 6: return [4 /*yield*/, render(view_data, obj, all_partials_data_obj)];
+                                    case 7: return [2 /*return*/, _a.sent()];
                                 }
                             });
                         });

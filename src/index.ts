@@ -1,6 +1,10 @@
 import * as mustache from 'mustache';
 import { resolve } from 'path';
 import { readFileSync } from 'fs';
+interface test {
+    obj: string,
+    partials: string;
+}
 export default (views_path, opts?) => {
     opts = opts || {};
     const ext = '.' + (opts.extension || 'html');
@@ -8,7 +12,15 @@ export default (views_path, opts?) => {
         if (ctx.render) return await next();
         const render = mustache.render;
         const global_partials = Object.assign({}, opts.partials || {});
-        ctx.render = async (view, obj = {}, partials?: { [key: string]: string }) => {
+        const defaultLayout = opts['defaultLayout'];
+        ctx.render = async (view, obj = {}, _opts: { [key: string]: any } = {}) => {
+            const html = await ctx.renderView(view, obj, _opts);
+            ctx.type = ctx.type || 'html';
+            ctx.body = html;
+        }
+        ctx.renderView = async (view, obj = {}, _opts: { [key: string]: any } = {}) => {
+            const partials = _opts.partials || {};
+            const layout = _opts.layout === false ? false : _opts.layout;
             obj = Object.assign({}, ctx.state, obj);
             view = view + ext;
             const view_path = resolve(views_path, view);
@@ -19,9 +31,21 @@ export default (views_path, opts?) => {
                 const partial_file_data = readFileSync(partial_file_path, 'utf-8');
                 return Object.assign(current, { [key]: partial_file_data });
             }, {});
-            const html = await render(view_data, obj, all_partials_data_obj);
-            ctx.type = ctx.type || 'html';
-            ctx.body = html;
+            if (layout) {
+                const layout_file_path = resolve(views_path, layout + ext);
+                const layout_file_data = readFileSync(layout_file_path, 'utf-8');
+                const body = await render(view_data, obj, all_partials_data_obj);
+                const _obj = Object.assign(obj, { body: body });
+                return await render(layout_file_data, _obj, all_partials_data_obj);
+            } else if (defaultLayout) {
+                const default_layout_file_path = resolve(views_path, defaultLayout + ext);
+                const default_layout_file_data = readFileSync(default_layout_file_path, 'utf-8');
+                const body = await render(view_data, obj, all_partials_data_obj);
+                const _obj = Object.assign(obj, { body: body });
+                return await render(default_layout_file_data, _obj, all_partials_data_obj);
+            } else {
+                return await render(view_data, obj, all_partials_data_obj);
+            }
         }
         await next();
     }
